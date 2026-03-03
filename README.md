@@ -202,6 +202,37 @@ Please Note This app builds upon:
  $./gradlew test lint
 ```
 
+## Desktop CLI (Linux/Windows Preview)
+This fork now includes a desktop scanner module (`desktop-cli`) that reuses the shared detection core.
+
+### Desktop requirements
+- JDK 17
+- Gradle 8.13+
+- Linux scanning: `bluetoothctl` (BlueZ)
+- Windows scanning: `pwsh` or `powershell` with Bluetooth permissions enabled
+
+### Run on Linux
+```bash
+gradle :desktop-cli:run --args="--scanner linux --rssi-threshold -75 --cooldown-ms 10000"
+```
+
+### Run on Windows
+```powershell
+gradle :desktop-cli:run --args="--scanner windows --rssi-threshold -75 --cooldown-ms 10000"
+```
+
+### Useful options
+- `--scanner auto|linux|windows`
+- `--override-company-ids 0x01AB,0x058E,0x0D53`
+- `--debug`
+- `--no-notify`
+
+### Build distributable executables
+```bash
+gradle :desktop-cli:installDist
+gradle :desktop-cli:distZip
+```
+
 ## Shoutouts
 - [@vfrmedia@social.tchncs.de](https://social.tchncs.de/@vfrmedia) for helping me with the warnings
 - [@mewsleah@meow.social](https://meow.social/@mewsleah) for pointing out the idea of a canary mode (yet to be implemented)
