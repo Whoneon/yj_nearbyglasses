@@ -233,6 +233,21 @@ gradle :desktop-cli:installDist
 gradle :desktop-cli:distZip
 ```
 
+## Native Inspired Project (Rust)
+This fork also includes a fully standalone native prototype at `inspired-native/`.
+It does not depend on Android APIs and can be split into its own repository.
+
+```bash
+cd inspired-native
+cargo test
+cargo run -- --scanner stdin --rssi-threshold -75
+```
+
+To run real BLE scanning:
+```bash
+cargo run --features ble -- --scanner auto --rssi-threshold -75 --cooldown-ms 10000
+```
+
 ## Shoutouts
 - [@vfrmedia@social.tchncs.de](https://social.tchncs.de/@vfrmedia) for helping me with the warnings
 - [@mewsleah@meow.social](https://meow.social/@mewsleah) for pointing out the idea of a canary mode (yet to be implemented)
