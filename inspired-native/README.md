@@ -1,62 +1,51 @@
 # nearby-glasses-native
-Standalone native BLE detector inspired by `yj_nearbyglasses`, without Android dependencies.
+Native BLE smart-glasses detector (Rust), inspired by `yj_nearbyglasses`.
 
-## What it is
-- Native Rust detector logic (company IDs + name heuristics + RSSI threshold + override company IDs)
-- CLI execution
-- `stdin` mode for deterministic testing and integration pipelines
-- Optional real BLE scanning (`--features ble`) for Linux/Windows through `btleplug`
+## Known Company IDs
+- `0x01AB` Meta Platforms
+- `0x058E` Meta Platforms Technologies
+- `0x0D53` EssilorLuxottica
+- `0x03C2` Snap
+
+## Build Requirements
+- Rust stable toolchain
+- Linux BLE builds: `pkg-config`, `libdbus-1-dev`
 
 ## Build
 ```bash
-cd inspired-native
 cargo build
 ```
 
-## Run (stdin mode, no BLE needed)
+## Test and Static Checks
+```bash
+cargo fmt --all -- --check
+cargo test
+cargo check --features ble
+```
+
+## Runtime
+### Deterministic mode (`stdin`)
+Consumes one JSON advertisement per line:
 ```bash
 cat <<'JSON' | cargo run -- --scanner stdin --rssi-threshold -75
 {"device_address":"AA:BB:CC:DD:EE:FF","device_name":"Ray-Ban Meta","rssi":-60,"company_id":1422}
 JSON
 ```
 
-## Run real BLE scan (Linux/Windows)
+### Live BLE scan (Linux/Windows)
 ```bash
 cargo run --features ble -- --scanner auto --rssi-threshold -75 --cooldown-ms 10000
 ```
 
-Scanner selection:
-- `--scanner auto` picks current platform
-- `--scanner linux` forces Linux scanner
-- `--scanner windows` forces Windows scanner
-- `--scanner stdin` consumes JSON lines from stdin
+## CLI Reference
+- `--scanner auto|linux|windows|stdin`
+- `--rssi-threshold <i16>` (default: `-75`)
+- `--cooldown-ms <u64>` (default: `10000`)
+- `--override-company-ids <csv>` (`0x01AB,0x058E,0x0D53`)
+- `--debug`
 
-## Override IDs
-```bash
-cargo run -- --scanner stdin --override-company-ids 0x01AB,0x058E,0x0D53
-```
+## License
+AGPL-3.0
 
-## Tests
-```bash
-cargo test
-```
-
-## CI and Releases
-- CI workflow: `.github/workflows/ci.yml`
-  - Runs on `main` pushes and PRs
-  - Matrix: Linux + Windows
-  - Steps: `fmt`, `test`, `check --features ble`, `build --release --features ble`
-- Release workflow: `.github/workflows/release.yml`
-  - Trigger: `v*` tag push (example: `v0.1.0`)
-  - Builds Linux/Windows binaries and publishes them in GitHub Releases
-
-Tag and release example:
-```bash
-git tag v0.1.0
-git push origin v0.1.0
-```
-
-## Make it a separate "inspired" repository
-1. Create a new GitHub repository (for example `Whoneon/nearby-glasses-native`).
-2. Copy `inspired-native/` as root of the new repository.
-3. Keep attribution in README ("inspired by yj_nearbyglasses") and align license notices with your policy.
+## Attribution
+Inspired by `yj_nearbyglasses`.
