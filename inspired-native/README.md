@@ -41,6 +41,21 @@ cargo run -- --scanner stdin --override-company-ids 0x01AB,0x058E,0x0D53
 cargo test
 ```
 
+## CI and Releases
+- CI workflow: `.github/workflows/ci.yml`
+  - Runs on `main` pushes and PRs
+  - Matrix: Linux + Windows
+  - Steps: `fmt`, `test`, `check --features ble`, `build --release --features ble`
+- Release workflow: `.github/workflows/release.yml`
+  - Trigger: `v*` tag push (example: `v0.1.0`)
+  - Builds Linux/Windows binaries and publishes them in GitHub Releases
+
+Tag and release example:
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
 ## Make it a separate "inspired" repository
 1. Create a new GitHub repository (for example `Whoneon/nearby-glasses-native`).
 2. Copy `inspired-native/` as root of the new repository.
