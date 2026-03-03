@@ -1,14 +1,13 @@
 package ch.pocketpc.nearbyglasses.model
 
-import ch.pocketpc.nearbyglasses.R
-
 import android.content.Context
 import android.os.Parcelable
+import ch.pocketpc.nearbyglasses.R
+import ch.pocketpc.nearbyglasses.core.SmartGlassesDetector
 import kotlinx.parcelize.Parcelize
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-
 
 @Parcelize
 data class DetectionEvent(
@@ -43,93 +42,51 @@ data class DetectionEvent(
         val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
         val time = dateFormat.format(Date(timestamp))
         val name = deviceName ?: context.getString(R.string.unknown_device)
-        //return "[$time] ${deviceName ?: "Unknown"} (${rssi}dBm) - $detectionReason"
         return "[$time] $name (${rssi}dBm) - $detectionReason"
-
     }
 
     companion object {
-        // Meta Platforms, Inc. (formerly Facebook)
-        const val META_COMPANY_ID1 = 0x01AB
-        const val META_COMPANY_ID2 = 0x058E
-        // EssilorLuxottica - needs more verification, but OAKLEY and some newer Meta models likely have that
-        const val ESSILOR_COMPANY_ID = 0x0D53
-        //Snap (Snapchat) Spectacles
-        const val SNAP_COMPANY_ID = 0x03C2
+        fun isSmartGlasses(context: Context, companyId: Int?, deviceName: String?): Pair<Boolean, String> {
+            val result = SmartGlassesDetector.detect(companyId, deviceName)
+            val reasons = result.reasons.map { reason ->
+                when (reason) {
+                    is SmartGlassesDetector.Reason.CompanyIdMatch -> {
+                        when (reason.companyKey) {
+                            SmartGlassesDetector.CompanyKey.META -> context.getString(
+                                R.string.reason_meta_company_id,
+                                SmartGlassesDetector.formatCompanyId(reason.companyId)
+                            )
 
-        fun isSmartGlasses(context: Context, companyId: Int?,deviceName: String?): Pair<Boolean, String>
-        {
-            val reasons = mutableListOf<String>()
+                            SmartGlassesDetector.CompanyKey.ESSILOR -> context.getString(
+                                R.string.reason_essilor_company_id,
+                                SmartGlassesDetector.formatCompanyId(reason.companyId)
+                            )
 
-            // Check company ID
-            if (companyId == META_COMPANY_ID1) {
-                //reasons.add("Meta Company ID (0x01AB)")
-                reasons.add(context.getString(
-                    R.string.reason_meta_company_id,
-                    "0x01AB"))
-            }
-            if (companyId == META_COMPANY_ID2) {
-                //reasons.add("Meta Company ID (0x058E)")
-                reasons.add(context.getString(
-                    R.string.reason_meta_company_id,
-                    "0x058E"))
-            }
+                            SmartGlassesDetector.CompanyKey.SNAP -> context.getString(
+                                R.string.reason_snap_company_id,
+                                SmartGlassesDetector.formatCompanyId(reason.companyId)
+                            )
+                        }
+                    }
 
-            if (companyId == ESSILOR_COMPANY_ID) {
-                //reasons.add("EssilorLuxottica Company ID (0x0D53)")
-                reasons.add(context.getString(
-                    R.string.reason_essilor_company_id,
-                    "0x0D53"))
-            }
-
-            if (companyId == SNAP_COMPANY_ID) {
-                //reasons.add("Snap Company ID (0x03C2)")
-                reasons.add(context.getString(
-                    R.string.reason_snap_company_id,
-                    "0x03C2"))
-            }
-
-            // Check device name
-            deviceName?.let { name ->
-                val nameLower = name.lowercase()
-                when {
-                    //nameLower.contains("rayban") -> reasons.add("Device name contains 'rayban'")
-                    //nameLower.contains("ray-ban") -> reasons.add("Device name contains 'ray-ban'")
-                    //nameLower.contains("ray ban") -> reasons.add("Device name contains 'ray ban'")
-
-                    nameLower.contains("rayban") -> reasons.add(
-                        context.getString(R.string.reason_name_contains,"rayban")
-                    )
-                    nameLower.contains("ray-ban") -> reasons.add(
-                        context.getString(R.string.reason_name_contains,"ray-ban")
-                    )
-                    nameLower.contains("ray ban") -> reasons.add(
-                        context.getString(R.string.reason_name_contains,"ray ban")
-                    )
-                else -> {} // do nothing
+                    is SmartGlassesDetector.Reason.NameContains -> {
+                        context.getString(R.string.reason_name_contains, reason.token)
+                    }
                 }
             }
 
-            return Pair(reasons.isNotEmpty(), reasons.joinToString(", "))
+            return Pair(result.isSmartGlasses, reasons.joinToString(", "))
         }
 
         fun getCompanyName(context: Context, companyId: Int): String {
-            return when (companyId) {
-                //META_COMPANY_ID1 -> "Meta Platforms, Inc."
-                //META_COMPANY_ID2 -> "Meta Platforms, Inc."
-                //ESSILOR_COMPANY_ID -> "EssilorLuxottica"
-                META_COMPANY_ID1,
-                META_COMPANY_ID2 ->
-                    context.getString(R.string.company_meta)
-                ESSILOR_COMPANY_ID ->
-                    context.getString(R.string.company_essilor)
-                SNAP_COMPANY_ID ->
-                    context.getString(R.string.company_snap)
-                else -> //"Unknown (0x${String.format("%04X", companyId)})"
-                    context.getString(
-                        R.string.company_unknown,
-                        "0x${String.format("%04X", companyId)}"
-                    )
+            return when (SmartGlassesDetector.companyKeyFor(companyId)) {
+                SmartGlassesDetector.CompanyKey.META -> context.getString(R.string.company_meta)
+                SmartGlassesDetector.CompanyKey.ESSILOR -> context.getString(R.string.company_essilor)
+                SmartGlassesDetector.CompanyKey.SNAP -> context.getString(R.string.company_snap)
+                null -> context.getString(
+                    R.string.company_unknown,
+                    SmartGlassesDetector.formatCompanyId(companyId)
+                )
             }
         }
     }
